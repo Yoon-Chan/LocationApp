@@ -63,12 +63,14 @@ dependencies {
     //파이어베이스 BoM
     implementation platform('com.google.firebase:firebase-bom:31.3.0')
     implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-database-ktx:20.1.0'
 
 
     //구글 맵 설정
     implementation 'com.google.android.gms:play-services-maps:18.1.0'
 
-    
+
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
