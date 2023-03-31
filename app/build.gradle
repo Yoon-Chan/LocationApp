@@ -1,13 +1,18 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    //Ad the Google services Gradle plugin
+    id 'com.google.gms.google-services'
+
+    id 'com.google.android.libraries.mapsplatform.secrets-gradle-plugin'
+
 }
 
 android {
-    signingConfigs{
-        debug{
+    signingConfigs {
+        debug {
             storeFile file("LocationApp.keystore")
-            storePassword'132456'
+            storePassword '132456'
             keyAlias 'androiddebug'
             keyPassword '132456'
         }
@@ -39,7 +44,7 @@ android {
         jvmTarget = '1.8'
     }
 
-    viewBinding{
+    viewBinding {
         enabled = true
     }
 
@@ -54,6 +59,16 @@ dependencies {
 
     //카카오 로그인 api
     implementation "com.kakao.sdk:v2-user:2.13.0"
+
+    //파이어베이스 BoM
+    implementation platform('com.google.firebase:firebase-bom:31.3.0')
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+
+
+    //구글 맵 설정
+    implementation 'com.google.android.gms:play-services-maps:18.1.0'
+
+    
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
