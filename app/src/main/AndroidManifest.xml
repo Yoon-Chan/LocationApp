@@ -47,6 +47,8 @@
                     android:scheme="@string/manifest_kakao_native_key" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".EmailLoginActivity"/>
     </application>
 
 

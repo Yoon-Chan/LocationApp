@@ -5,6 +5,8 @@ import android.content.res.Resources
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.example.locationapp.databinding.ActivityLoginBinding
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -19,6 +21,9 @@ import com.kakao.sdk.user.UserApiClient
 import com.kakao.sdk.user.model.User
 
 class LoginActivity : AppCompatActivity() {
+
+    private lateinit var emailLoginResult : ActivityResultLauncher<Intent>
+    private lateinit var pendingUser : User
 
     private val callback: (OAuthToken?, Throwable?) -> Unit = { oAuthToken, error ->
         if (error != null) {
@@ -40,6 +45,20 @@ class LoginActivity : AppCompatActivity() {
 
         // Kakao SDK 초기화
         KakaoSdk.init(this, getString(R.string.native_app_key))
+
+        emailLoginResult = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ){
+            if(it.resultCode == RESULT_OK){
+                val email = it.data?.getStringExtra("email")
+                if(email == null){
+                    showErrorToast()
+                    return@registerForActivityResult
+                }else{
+                    signInFirebase(pendingUser, email)
+                }
+            }
+        }
 
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -107,6 +126,7 @@ class LoginActivity : AppCompatActivity() {
 
         if (kakaoEmail.isEmpty()) {
             //추가로 이메일을 받는 작업
+            emailLoginResult.launch(Intent(this, EmailLoginActivity::class.java))
             return
         }
 
@@ -115,7 +135,7 @@ class LoginActivity : AppCompatActivity() {
 
     private fun signInFirebase(user: User, email: String) {
         val uId = user.id.toString()
-
+        pendingUser = user
         Firebase.auth.createUserWithEmailAndPassword(email, uId).addOnCompleteListener {
             if(it.isSuccessful){
                 //다음 과정
