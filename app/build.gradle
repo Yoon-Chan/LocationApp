@@ -70,6 +70,9 @@ dependencies {
     //구글 맵 설정
     implementation 'com.google.android.gms:play-services-maps:18.1.0'
 
+    //위치 설정
+    implementation 'com.google.android.gms:play-services-location:21.0.1'
+
 
 
     testImplementation 'junit:junit:4.13.2'
