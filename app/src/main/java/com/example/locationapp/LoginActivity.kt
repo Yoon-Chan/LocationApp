@@ -13,6 +13,7 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.kakao.sdk.auth.AuthApiClient
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.KakaoSdk
 import com.kakao.sdk.common.model.ClientError
@@ -34,6 +35,7 @@ class LoginActivity : AppCompatActivity() {
             //로그인 성공
             Log.e("loginActivity", "login in with kakao account : token : ${oAuthToken.toString()}")
             getKakaoAccountInfo()
+            navigateToMapActivity()
         }
     }
 
@@ -45,6 +47,7 @@ class LoginActivity : AppCompatActivity() {
 
         // Kakao SDK 초기화
         KakaoSdk.init(this, getString(R.string.native_app_key))
+
 
         emailLoginResult = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
@@ -62,6 +65,16 @@ class LoginActivity : AppCompatActivity() {
 
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+
+
+        if(AuthApiClient.instance.hasToken()){
+            UserApiClient.instance.accessTokenInfo{ _, error ->
+                if(error == null){
+                    getKakaoAccountInfo()
+                }
+            }
+        }
 
         binding.kakaoTalkLoginButton.setOnClickListener {
             if (UserApiClient.instance.isKakaoTalkLoginAvailable(this)) {
@@ -82,14 +95,16 @@ class LoginActivity : AppCompatActivity() {
                         } else {
                             //정보가 있는 경우
                             navigateToMapActivity()
+                            Log.e("loginActivity", "token == $token")
                         }
-                        Log.e("loginActivity", "token == $token")
                         //로그인 성공
                     }
                 }
             } else {
                 //카카오계정 로그인
                 UserApiClient.instance.loginWithKakaoAccount(this, callback = callback)
+
+
 
             }
         }
@@ -140,8 +155,7 @@ class LoginActivity : AppCompatActivity() {
             if(it.isSuccessful){
                 //다음 과정
                 updateFirebaseDatabase(user)
-            }else
-                showErrorToast()
+            }
 
         }.addOnFailureListener {
             //이미 가입된 계정
