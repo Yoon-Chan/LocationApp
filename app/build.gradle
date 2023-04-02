@@ -77,6 +77,8 @@ dependencies {
     implementation 'com.github.bumptech.glide:glide:4.14.2'
 
 
+    //lottie 라이브러리
+    implementation 'com.airbnb.android:lottie:5.2.0'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

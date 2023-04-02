@@ -29,10 +29,12 @@ import com.google.android.gms.maps.GoogleMap.OnMarkerClickListener
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ChildEventListener
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import com.kakao.sdk.common.util.Utility
@@ -106,6 +108,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListen
 
         setupFirebaseDatabase()
 
+        setupEmojiAnimationView()
+
+
 
     }
 
@@ -148,6 +153,34 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListen
                 CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 16.0f)
             )
         }
+    }
+    private fun setupEmojiAnimationView(){
+        binding.emojiLottieAnimation.setOnClickListener {
+            if(trackingPersonId != "") {
+                val lastEmoji = mutableMapOf<String, Any>()
+                lastEmoji["type"] = "sunglass"
+                lastEmoji["lastModifier"] = System.currentTimeMillis()
+                Firebase.database.reference.child("Emoji").child(trackingPersonId)
+                    .updateChildren(lastEmoji)
+            }
+
+            binding.emojiLottieAnimation.playAnimation()
+            binding.dummyLottieAnimation.animate()
+                .scaleX(3f)
+                .scaleY(3f)
+                .alpha(0f)
+                .withStartAction {
+                    binding.dummyLottieAnimation.scaleX = 1f
+                    binding.dummyLottieAnimation.scaleY = 1f
+                    binding.dummyLottieAnimation.alpha = 1f
+                }.withEndAction {
+                    binding.dummyLottieAnimation.scaleX = 1f
+                    binding.dummyLottieAnimation.scaleY = 1f
+                    binding.dummyLottieAnimation.alpha = 1f
+                }.start()
+        }
+        binding.centerLottieAnimationView.speed = 3f
+        binding.emojiLottieAnimation.speed = 3f
     }
 
     //권한 요청
@@ -202,6 +235,28 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListen
                     if(markerMap[uid] == null) {
                         markerMap[uid] = makeNewMarker(person,uid) ?: return
                     }
+                }
+            })
+
+
+        Firebase.database.reference.child("Emoji").child(Firebase.auth.currentUser?.uid ?: "")
+            .addValueEventListener(object : ValueEventListener{
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    binding.centerLottieAnimationView.playAnimation()
+                    binding.centerLottieAnimationView.animate()
+                        .scaleX(7f)
+                        .scaleY(7f)
+                        .alpha(0.3f)
+                        .setDuration(binding.centerLottieAnimationView.duration)
+                        .withEndAction{
+                            binding.centerLottieAnimationView.scaleX = 0f
+                            binding.centerLottieAnimationView.scaleY = 0f
+                            binding.centerLottieAnimationView.alpha = 0f
+                        }.start()
                 }
             })
     }
@@ -282,7 +337,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListen
     override fun onMarkerClick(marker: Marker): Boolean {
         //custom event
         trackingPersonId = marker.tag as? String ?: ""
-
+        val bottomSheetBehavior = BottomSheetBehavior.from(binding.emojiBottomSheetLayout)
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
         return false
     }
 }
