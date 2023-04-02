@@ -110,6 +110,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListen
 
         setupEmojiAnimationView()
 
+        setCurrentLocationView()
+
 
 
     }
@@ -147,13 +149,9 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListen
         //권한이 있는 상태
         fusedLocationClient.requestLocationUpdates(locationRequest,locationCallback, Looper.getMainLooper())
 
-        //마지막 위치 지도 이동
-        fusedLocationClient.lastLocation.addOnSuccessListener {
-            googleMap.animateCamera(
-                CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 16.0f)
-            )
-        }
+        moveLastLocation()
     }
+
     private fun setupEmojiAnimationView(){
         binding.emojiLottieAnimation.setOnClickListener {
             if(trackingPersonId != "") {
@@ -183,6 +181,35 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListen
         binding.emojiLottieAnimation.speed = 3f
     }
 
+    private fun setCurrentLocationView(){
+        binding.currentLocationButton.setOnClickListener {
+            trackingPersonId = ""
+            moveLastLocation()
+        }
+    }
+
+    private fun moveLastLocation(){
+        //권한 확인
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestLocationPermission()
+
+            return
+        }
+
+        //마지막 위치 지도 이동
+        fusedLocationClient.lastLocation.addOnSuccessListener {
+            googleMap.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 16.0f)
+            )
+        }
+    }
     //권한 요청
     private fun requestLocationPermission(){
         locationPermissionRequest.launch(
@@ -240,12 +267,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListen
 
 
         Firebase.database.reference.child("Emoji").child(Firebase.auth.currentUser?.uid ?: "")
-            .addValueEventListener(object : ValueEventListener{
-                override fun onCancelled(error: DatabaseError) {
-
-                }
-
-                override fun onDataChange(snapshot: DataSnapshot) {
+            .addChildEventListener(object : ChildEventListener{
+                override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
                     binding.centerLottieAnimationView.playAnimation()
                     binding.centerLottieAnimationView.animate()
                         .scaleX(7f)
@@ -257,6 +280,22 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListen
                             binding.centerLottieAnimationView.scaleY = 0f
                             binding.centerLottieAnimationView.alpha = 0f
                         }.start()
+                }
+
+                override fun onChildRemoved(snapshot: DataSnapshot) {
+
+                }
+
+                override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {
+
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+
+                }
+
+                override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {
+
                 }
             })
     }
@@ -314,6 +353,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, OnMarkerClickListen
 
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
+
 
         //최대를 줌을 땡겼을 때의 레벨을 설정
         googleMap.setMaxZoomPreference(20.0f)
